@@ -1,27 +1,28 @@
 # Topic: sensitivity analysis
 
 from docplex.mp.model import Model
+from docplex.mp.relax_linear import LinearRelaxer
 
 # Define the Model ###
 mdl = Model(name='telephone_production')
 
 # Variables
-# The continuous variable desk represents the production of desk telephones.
-# The continuous variable cell represents the production of cell phones.
+# The integer variable desk represents the production of desk telephones.
+# The integer variable cell represents the production of cell phones.
 desk = mdl.continuous_var(name='desk', lb=0)
 cell = mdl.continuous_var(name='cell', lb=0)
 
 # Constraints
 # Production machines daily availability (8 hours)
 # Factory opening hours
-ct_machine_1 = mdl.add_constraint(2 * desk + 1 * cell <= 8)
-ct_machine_2 = mdl.add_constraint(1 * desk + 2 * cell <= 8)
-ct_factory = mdl.add_constraint(3 * desk + 3 * cell <= 24)
+ct_machine_1 = mdl.add_constraint(2 * desk + 1 * cell <= 8, ctname="machine_1")
+ct_machine_2 = mdl.add_constraint(1 * desk + 2 * cell <= 8, ctname="machine_2")
+ct_factory = mdl.add_constraint(3 * desk + 3 * cell <= 24, ctname="factory")
 
 # Objective Function
 mdl.maximize(300 * desk + 200 * cell)
 
-# Model information
+# Model information (MILP: Mixed Integer Linear Programming)
 mdl.print_information()
 
 # Solve the model
@@ -69,5 +70,15 @@ s2.display()
 s3.display()
 
 # Decision variables ###
-print('* desk variable has reduced cost: {0}'.format(desk.reduced_cost))
-print('* cell variable has reduced cost: {0}'.format(cell.reduced_cost))
+# Reduced costs, relatively to mdl.maximize(300 * desk + 700 * cell)
+print(f'Desk variable has a reduced cost of: {desk.reduced_cost}.')
+print(f'Cell variable has a reduced cost of: {cell.reduced_cost}.')
+
+# Linear Relaxer ###
+# Since many sensitivity measures are not available for integer problems, we can relax integer constraint by using a LinearRelaxer
+# Which basically transform decision variables from integer to continuous vars (from MILP to LP)
+rmdl = LinearRelaxer.make_relaxed_model(mdl)
+rmdl.print_information()
+rs = rmdl.solve()
+rs.display()
+print(f"The shadow price for constraint of machine 1 is: {rmdl.get_constraint_by_name('machine_1').dual_value}.")
