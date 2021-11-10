@@ -7,8 +7,8 @@ from docplex.mp.relax_linear import LinearRelaxer
 mdl = Model(name='telephone_production')
 
 # Variables
-# The integer variable desk represents the production of desk telephones.
-# The integer variable cell represents the production of cell phones.
+# The continuous variable desk represents the production of desk telephones.
+# The continuous variable cell represents the production of cell phones.
 desk = mdl.continuous_var(name='desk', lb=0)
 cell = mdl.continuous_var(name='cell', lb=0)
 
@@ -22,7 +22,7 @@ ct_factory = mdl.add_constraint(3 * desk + 3 * cell <= 24, ctname="factory")
 # Objective Function
 mdl.maximize(300 * desk + 200 * cell)
 
-# Model information (MILP: Mixed Integer Linear Programming)
+# Model information (LP: Linear Programming)
 mdl.print_information()
 
 # Solve the model
@@ -61,18 +61,19 @@ s1.display()
 print(f"We can move the first objective function coefficient in a range of {cpx.solution.sensitivity.objective()[0]} without changing the optimal solution, assuming all other coefficients remain constant.")
 print(f"We can move the second objective function coefficient in a range of {cpx.solution.sensitivity.objective()[1]} without changing the optimal solution, assuming all other coefficients remain constant.")
 # Let's try
-mdl.maximize(300 * desk + 600 * cell)
+mdl.maximize(400 * desk + 200 * cell - 100 * overtime)
 s2 = mdl.solve()
-mdl.maximize(300 * desk + 700 * cell)
+mdl.maximize(500 * desk + 200 * cell - 100 * overtime)
 s3 = mdl.solve()
-s.display()
+s1.display()
 s2.display()
 s3.display()
 
 # Decision variables ###
-# Reduced costs, relatively to mdl.maximize(300 * desk + 700 * cell)
+# Reduced costs, relatively to mdl.maximize(500 * desk + 200 * cell - 100 * overtime)
 print(f'Desk variable has a reduced cost of: {desk.reduced_cost}.')
 print(f'Cell variable has a reduced cost of: {cell.reduced_cost}.')
+print(f'Cell variable has a reduced cost of: {overtime.reduced_cost}.')
 
 # Linear Relaxer ###
 # Since many sensitivity measures are not available for integer problems, we can relax integer constraint by using a LinearRelaxer
